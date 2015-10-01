@@ -272,12 +272,12 @@ class MsProduct extends Model {
 
 		$this->db->query($sql);
 		
-		foreach ($data['product_category'] as $id => $category_id) {
-			$sql = "INSERT INTO " . DB_PREFIX . "product_to_category
-					SET product_id = " . (int)$product_id . ",
-						category_id = " . (int)$category_id;
-			$this->db->query($sql);
-		}
+		foreach ($data['product_categories'] as $id => $category_id) {
+                    $sql = "INSERT INTO " . DB_PREFIX . "product_to_category
+                                                SET product_id = " . (int) $product_id . ",
+                                                        category_id = " . (int) $category_id;
+                    $this->db->query($sql);
+                }
 
 		$sql = "INSERT INTO " . DB_PREFIX . "product_to_store
 				SET product_id = " . (int)$product_id . ",
@@ -537,12 +537,12 @@ class MsProduct extends Model {
 				WHERE product_id = " . (int)$product_id;
 		$this->db->query($sql);
 
-		foreach ($data['product_category'] as $id => $category_id) {
-			$sql = "INSERT INTO " . DB_PREFIX . "product_to_category
-					SET product_id = " . (int)$product_id . ",
-						category_id = " . (int)$category_id;
-			$this->db->query($sql);	
-		}
+		foreach ($data['product_categories'] as $id => $category_id) {
+                    $sql = "INSERT INTO " . DB_PREFIX . "product_to_category
+					SET product_id = " . (int) $product_id . ",
+						category_id = " . (int) $category_id;
+                    $this->db->query($sql);
+                }
 
 		/*
 		 * images
@@ -1047,6 +1047,77 @@ class MsProduct extends Model {
         $query = $this->db->query($sql);
 
         return $query->rows;
+    }
+    /** new category structure ***/
+    /**
+     * This function accepts a category and return its full category path in 
+     * form of string like parent_child1_child2
+     * @param type $parent_id
+     * @param type $current_path
+     * @return string
+     */
+    public function getPath($child_id, $current_path = '') {
+        $category_info = $this->model_catalog_category->getCategory($child_id);
+
+        if ($category_info) {
+            if (!$current_path) {
+                $new_path = $category_info['category_id'];
+            } else {
+                $new_path = $category_info['category_id'] . '_' . $current_path;
+            }
+
+            $path = $this->getPath($category_info['parent_id'], $new_path);
+
+            if ($path) {
+                return $path;
+            } else {
+                return $new_path;
+            }
+        }
+    }
+    /**
+     * recursive function for returning category path with all sibling data
+     * @param type $child_id
+     * @return array
+     */
+    public function getCategoryDataWithParents($child_id) {
+        $category_info = $this->getCategory($child_id);
+        if ($category_info['parent_id'] > 0) {
+            $this->categories[$category_info['parent_id']] = $this->getChilderenCategories($category_info['parent_id']);
+            $this->getCategoryDataWithParents($category_info['parent_id']);
+        }
+
+        $this->categories[0] = $this->getChilderenCategories(0);
+        return array_reverse($this->categories, true);
+    }
+    /**
+     * Get top level categories
+     * @return array
+     */
+    public function getTopCategories() {
+        $query = $this->db->query("SELECT c.category_id,cd.name FROM oc_category c LEFT JOIN oc_category_description cd ON c.category_id=cd.category_id WHERE c.parent_id=0 && c.status=1");
+        return $query->rows;
+    }
+    /*
+     * get children categories by parent id
+     * @return array
+     */
+    public function getChilderenCategories($cat_id) {
+        $query = $this->db->query("SELECT c.category_id,cd.name FROM oc_category c LEFT JOIN oc_category_description cd ON c.category_id=cd.category_id WHERE c.parent_id='$cat_id' && c.status=1");
+        return $query->rows;
+    }
+    /**
+     * validate a category if its a last level category
+     * @param type $cat_id
+     * @return boolean
+     */
+    public function validateIfLastLevelCategory($cat_id) {
+        $query = $this->db->query("SELECT c.category_id,cd.name FROM oc_category c LEFT JOIN oc_category_description cd ON c.category_id=cd.category_id WHERE c.parent_id ='$cat_id'");
+        if ($query->num_rows > 0) {
+            return FALSE;
+        } else {
+            return TRUE;
+        }
     }
 }
 ?>

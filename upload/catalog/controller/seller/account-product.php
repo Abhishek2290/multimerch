@@ -511,23 +511,16 @@ class ControllerSellerAccountProduct extends ControllerSellerAccount {
 		}
 		*/
 
-		if (isset($data['product_category']) && !empty($data['product_category'])) {
-			$categories = $this->MsLoader->MsProduct->getCategories();
-			$disabled = array();
-			foreach ($categories as $k => $c) {
-				if ($c['disabled']) $disabled[] = $c['category_id'];
-			}
+		if (isset($data['categories']) && !empty($data['categories'])) {
+            
+                    foreach ($data['categories'] as $index => $last_child_id) {
+                        if (!$this->MsLoader->MsProduct->validateIfLastLevelCategory($last_child_id)) {
+                            unset($data['categories'][$index]);
+                        }
+                    }
 
-			// convert to array if needed
-			$data['product_category'] = is_array($data['product_category']) ? $data['product_category'] : array($data['product_category']);
-
-			// remove disabled categories if set
-			$data['product_category'] = array_diff($data['product_category'], $disabled);
-
-			if (!$this->config->get('msconf_allow_multiple_categories') && count($data['product_category']) > 1) {
-				$data['product_category'] = array($data['product_category'][0]);
-			}
-		}
+                    $data['product_categories'] = array_values($data['categories']);
+                }
 
 		// data array could have been modified in the previous step
 		if (!isset($data['product_category']) || empty($data['product_category'])) {
@@ -1177,6 +1170,9 @@ class ControllerSellerAccountProduct extends ControllerSellerAccount {
         $this->data['msship_physical_product_categories'] = $this->config->get('msship_physical_product_categories');
         $this->data['msship_digital_product_categories'] = $this->config->get('msship_digital_product_categories');
         $this->data['ms_account_product_download_note'] = sprintf($this->language->get('ms_account_product_download_note'), $this->config->get('msconf_allowed_download_types'));
+        $this->data['ms_account_product_add_another_category'] = $this->language->get('ms_account_product_add_another_category');
+        $this->data['ms_account_product_select_category'] = $this->language->get('ms_account_product_select_category');
+
 		$this->data['ms_account_product_image_note'] = sprintf($this->language->get('ms_account_product_image_note'), $this->config->get('msconf_allowed_image_types'));
 		$this->data['back'] = $this->url->link('seller/account-product', '', 'SSL');
 	}
@@ -1356,8 +1352,18 @@ class ControllerSellerAccountProduct extends ControllerSellerAccount {
         }
 
         $this->data['product'] = $product;
-		$this->data['product']['category_id'] = $this->MsLoader->MsProduct->getProductCategories($product_id);
-		
+        /** NEW CATEGORY STRUCTURE **/
+        $this->data['product']['assigned_categories'] = $this->MsLoader->MsProduct->getProductCategories($product_id);
+        $this->data['selected_categories'] = array();
+        if (!empty($this->data['product']['assigned_categories'])) {
+            $assigned_child_categories = explode(",", $this->data['product']['assigned_categories']);
+            foreach ($assigned_child_categories as $key => $assigned_child_category) {
+                $this->MsLoader->MsProduct->categories = array();
+                $this->data['selected_categories'][$key] = $this->MsLoader->MsProduct->getCategoryDataWithParents($assigned_child_category);
+                $this->data['selected_categories_path_array'][$key] = array_flip(explode("_", $this->MsLoader->MsProduct->getPath($assigned_child_category)));
+            }
+        }
+	/** NEW CATEGORY STRUCTURE **/	
 		$breadcrumbs = array(
 			array(
 				'text' => $this->language->get('text_account'),

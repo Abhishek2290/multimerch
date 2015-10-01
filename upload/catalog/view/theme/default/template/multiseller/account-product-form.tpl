@@ -1,4 +1,8 @@
 <?php echo $header; ?>
+<style>
+    .top-buffer { margin-top: 3% !important; }
+    .right-buffer { margin-right:3% !important; }
+</style>
 <div class="container ms-account-product-form" xmlns="http://www.w3.org/1999/html">
   <ul class="breadcrumb">
     <?php foreach ($breadcrumbs as $breadcrumb) { ?>
@@ -161,63 +165,61 @@
 					</div>
 				</div>
 
-				<div class="form-group required">
-					<label class="col-sm-2 control-label"><?php echo $ms_account_product_category; ?></label>
-					<div class="col-sm-10" id="product_category_block">
-						<?php if (!$msconf_allow_multiple_categories) { ?>
-
-						<select class="form-control" name="product_category">
-							<option value=""><?php echo ''; ?></option>
-							<?php foreach ($categories as $category) { ?>
-                                <?php if($msconf_enable_categories && $this->config->get('msconf_enable_shipping') == 2) { ?>
-                                    <?php if($product['shipping'] == 1 || $product['shipping'] == NULL) { ?>
-                                        <?php if(in_array($category['category_id'],$msship_physical_product_categories)) { ?>
-                                            <option value="<?php echo $category['category_id']; ?>" <?php if (in_array($category['category_id'], explode(',',$product['category_id'])) && !$category['disabled']) { ?>selected="selected"<?php } ?> <?php echo ($category['disabled'] ? 'disabled' : ''); ?>><?php echo $category['name']; ?></option>
-                                    <?php }} else { ?>
-                                        <?php if(in_array($category['category_id'],$msship_digital_product_categories)) { ?>
-                                            <option value="<?php echo $category['category_id']; ?>" <?php if (in_array($category['category_id'], explode(',',$product['category_id'])) && !$category['disabled']) { ?>selected="selected"<?php } ?> <?php echo ($category['disabled'] ? 'disabled' : ''); ?>><?php echo $category['name']; ?></option>
-                                    <?php }} ?>
-                                <?php } else { ?>
-                                <option value="<?php echo $category['category_id']; ?>" <?php if (in_array($category['category_id'], explode(',',$product['category_id'])) && !$category['disabled']) { ?>selected="selected"<?php } ?> <?php echo ($category['disabled'] ? 'disabled' : ''); ?>><?php echo $category['name']; ?></option>
-							<?php }} ?>
-						</select>
-
-						<?php } else { ?>
-
-						<div class="scrollbox">
-						<?php $class = 'odd'; ?>
-						<?php foreach ($categories as $category) { ?>
-                            <?php if($msconf_enable_categories && $this->config->get('msconf_enable_shipping') == 2) { ?>
-                                <?php if($product['shipping'] == 1 || $product['shipping'] == NULL) { ?>
-                                    <?php if(in_array($category['category_id'],$msship_physical_product_categories)) { ?>
-                                        <?php $class = ($class == 'even' ? 'odd' : 'even'); ?>
-                                        <div class="<?php echo $class; ?> <?php echo ($category['disabled'] ? 'disabled' : ''); ?>">
-                                            <input type="checkbox" name="product_category[]" value="<?php echo $category['category_id']; ?>" <?php if (in_array($category['category_id'], explode(',',$product['category_id'])) && !$category['disabled']) { ?>checked="checked"<?php } ?> <?php if ($category['disabled']) { ?>disabled="disabled"<?php } ?>/>
-                                            <?php echo $category['name']; ?>
-                                        </div>
-                                <?php }} else { ?>
-                                     <?php if(in_array($category['category_id'],$msship_digital_product_categories)) { ?>
-                                        <?php $class = ($class == 'even' ? 'odd' : 'even'); ?>
-                                        <div class="<?php echo $class; ?> <?php echo ($category['disabled'] ? 'disabled' : ''); ?>">
-                                            <input type="checkbox" name="product_category[]" value="<?php echo $category['category_id']; ?>" <?php if (in_array($category['category_id'], explode(',',$product['category_id'])) && !$category['disabled']) { ?>checked="checked"<?php } ?> <?php if ($category['disabled']) { ?>disabled="disabled"<?php } ?>/>
-                                            <?php echo $category['name']; ?>
-                                        </div>
-                                <?php }} ?>
-                            <?php } else { ?>
-                                <?php $class = ($class == 'even' ? 'odd' : 'even'); ?>
-                                <div class="<?php echo $class; ?> <?php echo ($category['disabled'] ? 'disabled' : ''); ?>">
-                                    <input type="checkbox" name="product_category[]" value="<?php echo $category['category_id']; ?>" <?php if (in_array($category['category_id'], explode(',',$product['category_id'])) && !$category['disabled']) { ?>checked="checked"<?php } ?> <?php if ($category['disabled']) { ?>disabled="disabled"<?php } ?>/>
-                                    <?php echo $category['name']; ?>
+				<?php if (isset($categories) && !empty($categories)) { ?>
+                                <div class="categories_box">
+                                    <div class="form-group required" id="categorySelectContainer">
+                                        <label class="col-sm-2 control-label"><?php echo $ms_account_product_category; ?></label>
+                                        <?php if (empty($selected_categories)) { ?>
+                                            <div id="selectContainer_1" data-index="1">
+                                                <div class="col-sm-10 form-inline" id="product_category_block_1">
+                                                    <select required data-index="1" data-level="1" id="id_1_1" class="form-control catSelect right-buffer" name="categories[1]">
+                                                        <option value=""><?php echo $ms_account_product_select_category; ?></option>
+                                                        <?php foreach ($categories as $category) { ?>
+                                                            <option value="<?php echo $category['category_id']; ?>"><?php echo $category['name']; ?></option>
+                                                        <?php } ?>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <?php
+                                        } else {
+                                            foreach ($selected_categories as $key => $selected_category) { ?>
+                                                <div id="selectContainer_<?php echo $key + 1; ?>" <?php if ($key > 0) { echo "class='col-sm-offset-2'"; } ?> data-index="<?php echo $key + 1; ?>">
+                                                    <div class="col-sm-10 form-inline <?php if ($key > 0) { echo "top-buffer"; } ?>" id="product_category_block_<?php echo $key + 1; ?>">
+                                                         <?php
+                                                         $level = 1;
+                                                         foreach ($selected_category as $parent_id => $selected_category_childs) {
+                                                             ?>
+                                                            <select required data-index="<?php echo $key + 1; ?>" data-level="<?php echo $level; ?>" id="id_<?php echo $key + 1; ?>_<?php echo $level; ?>" class="form-control catSelect right-buffer" name="categories[<?php echo $key + 1; ?>]">
+                                                                <option value=""><?php echo $ms_account_product_select_category; ?></option>
+                                                                <?php foreach ($selected_category_childs as $selected_category_child) { ?>
+                                                                    <option <?php
+                                                                    if (array_key_exists($selected_category_child['category_id'], $selected_categories_path_array[$key])) {
+                                                                        echo "selected";
+                                                                    }
+                                                                    ?> value="<?php echo $selected_category_child['category_id']; ?>"><?php echo $selected_category_child['name']; ?></option>
+                                                                    <?php } ?> 
+                                                            </select>
+                                                            <?php
+                                                            $level++;
+                                                        }
+                                                        ?>
+                                                        <a href="javascript:void(0)" class="btn btn-primary remove_html" data-index="<?php echo $key + 1; ?>" style="position: relative; z-index: 0;"><span class="glyphicon glyphicon-remove"></span></a>
+                                                    </div>
+                                                </div>
+                                            <?php
+                                            }
+                                        }
+                                        ?>
+                                    </div>
+                                    <div class="col-sm-offset-2">
+                                        <p class="ms-note"><?php echo $ms_account_product_category_note; ?></p>
+                                        <p class="error" id="error_product_category"></p>
+                                        <a href="javascript:void(0)" class="btn btn-primary" id="add_other_category" style="position: relative; z-index: 0;">
+                                            <span><?php echo $ms_account_product_add_another_category; ?></span>
+                                        </a>
+                                    </div>
                                 </div>
-                            <?php }} ?>
-						</div>
-
-						<?php } ?>
-
-						<p class="ms-note"><?php echo $ms_account_product_category_note; ?></p>
-						<p class="error" id="error_product_category"></p>
-					</div>
-				</div>
+                            <?php } ?>
 
 				<?php if ($this->config->get('msconf_enable_shipping') == 2) { ?>
 				<div class="form-group">
@@ -412,7 +414,7 @@
 				<label class="col-sm-2 control-label"><?php echo $ms_account_product_model; ?></label>
 				<div class="col-sm-10">
 					<input type="text" class="form-control" name="product_model" value="<?php echo $product['model']; ?>" />
-					<p class="error" id="error_product_model; ?>"></p>
+					<p class="error" id="error_product_model"></p>
 				</div>
 			</div>
 			<?php } ?>
@@ -777,18 +779,145 @@
 
 <?php $timestamp = time(); ?>
 <script>
-	var msGlobals = {
-		timestamp: '<?php echo $timestamp; ?>',
-		token : '<?php echo md5($salt . $timestamp); ?>',
-		session_id: '<?php echo session_id(); ?>',
-		product_id: '<?php echo $product['product_id']; ?>',
-		text_delete: '<?php echo htmlspecialchars($ms_delete, ENT_QUOTES, "UTF-8"); ?>',
-		text_none: '<?php echo htmlspecialchars($ms_none, ENT_QUOTES, "UTF-8"); ?>',
-		uploadError: '<?php echo htmlspecialchars($ms_error_file_upload_error, ENT_QUOTES, "UTF-8"); ?>',
-		formError: '<?php echo htmlspecialchars($ms_error_form_submit_error, ENT_QUOTES, "UTF-8"); ?>',
-		formNotice: '<?php echo htmlspecialchars($ms_error_form_notice, ENT_QUOTES, "UTF-8"); ?>',
-		config_enable_rte: '<?php echo $this->config->get('msconf_enable_rte'); ?>',
-		config_enable_quantities: '<?php echo $this->config->get('msconf_enable_quantities'); ?>'
-	};
+    var msGlobals = {
+        timestamp: '<?php echo $timestamp; ?>',
+        token: '<?php echo md5($salt . $timestamp); ?>',
+        session_id: '<?php echo session_id(); ?>',
+        product_id: '<?php echo $product['product_id']; ?>',
+        text_delete: '<?php echo htmlspecialchars($ms_delete, ENT_QUOTES, "UTF-8"); ?>',
+        text_none: '<?php echo htmlspecialchars($ms_none, ENT_QUOTES, "UTF-8"); ?>',
+        uploadError: '<?php echo htmlspecialchars($ms_error_file_upload_error, ENT_QUOTES, "UTF-8"); ?>',
+        formError: '<?php echo htmlspecialchars($ms_error_form_submit_error, ENT_QUOTES, "UTF-8"); ?>',
+        formNotice: '<?php echo htmlspecialchars($ms_error_form_notice, ENT_QUOTES, "UTF-8"); ?>',
+        config_enable_rte: '<?php echo $this->config->get('msconf_enable_rte'); ?>',
+        config_enable_quantities: '<?php echo $this->config->get('msconf_enable_quantities'); ?>',
+        max_categories_allowed : 5 ,
+        max_categories_allowed_warning : "A product can have maximum 5 categories" //{max_category allowed},
+    };
+
+
+    var new_select_box_html = '<div id="{div_id}" data-index="{div_index}" class="col-sm-offset-2">\n\
+        <div class="col-sm-10 form-inline top-buffer" id="{product_category_block_id}">\n\
+        <select required data-index="{select_index}" data-level="{select_level}" id="{id}" class="form-control catSelect right-buffer" name="categories[{name_index}]">\n\
+        <option value=""><?php echo $ms_account_product_select_category; ?></option>\n\
+<?php foreach ($categories as $category) { ?><option value="<?php echo $category['category_id']; ?>"><?php echo $category['name']; ?></option>\n\
+<?php } ?></select></div></div>';
+
+    var remove_html = '<a href="javascript:void(0)" class="btn btn-primary remove_html" data-index="{remove_index}" style="position: relative; z-index: 0;">\n\
+<span class="glyphicon glyphicon-remove"></span></a>';
+
+    $(document).ready(function () {
+        $("#add_other_category").on('click', function () {
+            if($("#categorySelectContainer > div").length >= msGlobals.max_categories_allowed) {
+                alert(msGlobals.max_categories_allowed_warning);
+                return false;
+            } else if($("#categorySelectContainer > div").length == 0) {
+                var category_index = 1;
+            } else {
+                var category_index = $("#categorySelectContainer > div:last-child").data('index') + 1;
+            }
+            var category_level = 1;
+            var new_cat_row_html = getNewSelectHTML(category_level, category_index);
+
+            $("#categorySelectContainer").append(new_cat_row_html);
+            
+            for (var i = 1; i < category_index; i++) {
+                if ($("#product_category_block_" + i + " > .remove_html").length == 0) {
+                    var remove_html_current = remove_html.replace("{remove_index}", i);
+                    $("#product_category_block_" + i).append(remove_html_current);
+                }
+            }
+        });
+    });
+
+
+
+    $(document).on('change', '.catSelect', function () {
+        var $th = $(this);
+        var cat_id = $th.val();
+        var index = $th.data('index');
+        var level = $th.data('level');
+        var current_level = level + 1;
+        for (var i = current_level; i < 5; i++) {
+            $("#id_" + index + "_" + i).remove();
+        }
+
+        if (cat_id != '') {
+            var categories = getChildCategories(cat_id);
+            if (categories !== '') {
+                var select_html = getcategorySelectHTML(categories, index, current_level);
+                $th.after(select_html);
+            }
+        }
+    });
+
+    $(document).on('click', '.remove_html', function () {
+        var index = $(this).data('index');
+        $("#selectContainer_" + index).remove();
+        $("#categorySelectContainer").children('div').eq(0).children('div').eq(0).removeClass('top-buffer');
+
+    });
+
+    function getcategorySelectHTML(categories, index, current_level) {
+        //create a new select box
+        var select = document.createElement("select");
+        var option;
+        //set select attributes
+        select.setAttribute("name", "categories[" + index + "]");
+        select.setAttribute("id", "id_" + index + "_" + current_level);
+        select.setAttribute("class", "form-control catSelect right-buffer");
+        select.setAttribute("style", "margin-left:10px;");
+        $(select).data('level', current_level);
+        $(select).data('index', index);
+
+        select.options.length = 0; // clear out existing items
+
+        //set default option
+        option = document.createElement("option");
+        option.value = '';
+        option.text = "<?php echo $ms_account_product_select_category; ?>";
+        select.appendChild(option);
+        for (var i = 0; i < categories.length; i++) {
+            option = document.createElement("option");
+            option.value = categories[i]['category_id'];
+            option.text = categories[i]['name'];
+            select.appendChild(option);
+        }
+        return select;
+    }
+
+    function getChildCategories(cat_id) {
+        var categories = '';
+        $.ajax({
+            url: "index.php?route=seller/account-product/getChildCats", // Url to which the request is send
+            type: "POST", // Type of request to be send, called as method
+            data: {'cat_id': cat_id}, // Data sent to server, a set of key/value pairs (i.e. form fields and values)
+            dataType: 'json', // To send DOMDocument or non processed data file it is set to false
+            async: false, // To send DOMDocument or non processed data file it is set to false
+            success: function (r_data)   // A function to be called if request succeeds
+            {
+                if (r_data.status == 1) {
+                    categories = r_data.categories;
+                }
+            }
+        });
+        return categories;
+    }
+
+    function getNewSelectHTML(category_level, category_index) {
+        var cat_new_html = new_select_box_html;
+        cat_new_html = cat_new_html.replace("{div_index}", category_index);
+        //remove top buffer if first 
+        if(category_index == 1) {
+            cat_new_html = cat_new_html.replace(" top-buffer", '');
+        }
+        cat_new_html = cat_new_html.replace("{div_id}", "selectContainer_" + category_index);
+        cat_new_html = cat_new_html.replace("{select_index}", category_index);
+        cat_new_html = cat_new_html.replace("{name_index}", category_index);
+        cat_new_html = cat_new_html.replace("{select_level}", category_level);
+        cat_new_html = cat_new_html.replace("{product_category_block_id}", "product_category_block_" + category_index);
+        cat_new_html = cat_new_html.replace("{id}", "id_" + category_index + "_" + category_level);
+        return cat_new_html;
+    }
 </script>
 <?php echo $footer; ?>

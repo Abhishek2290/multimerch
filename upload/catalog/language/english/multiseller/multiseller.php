@@ -350,6 +350,9 @@ $_['ms_account_product_image_note'] = 'Select images for your product. First ima
 $_['ms_account_product_message_reviewer'] = 'Message to the reviewer';
 $_['ms_account_product_message'] = 'Message';
 $_['ms_account_product_message_note'] = 'Your message to the reviewer';
+$_['ms_account_product_select_category'] = 'Select Category';
+$_['ms_account_product_add_another_category'] = 'Add another category';
+$_['ms_error_product_category_not_valid'] = 'Please select atleast one category with all children';
 //Data Tab
 $_['ms_account_product_tab_data'] = 'Data';
 $_['ms_account_product_model'] = 'Model';
