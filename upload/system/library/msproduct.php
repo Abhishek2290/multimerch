@@ -10,6 +10,7 @@ class MsProduct extends Model {
 	const MS_PRODUCT_VALIDATION_APPROVAL = 2;
 	
 	private $errors;
+        public $categories = array();
 	
 	
 	private function _getDepth($a, $eid) {
@@ -1057,7 +1058,7 @@ class MsProduct extends Model {
      * @return string
      */
     public function getPath($child_id, $current_path = '') {
-        $category_info = $this->model_catalog_category->getCategory($child_id);
+        $category_info = $this->getCategory($child_id);
 
         if ($category_info) {
             if (!$current_path) {
@@ -1118,6 +1119,11 @@ class MsProduct extends Model {
         } else {
             return TRUE;
         }
+    }
+    public function getCategory($category_id) {
+        $query = $this->db->query("SELECT DISTINCT *, (SELECT GROUP_CONCAT(cd1.name ORDER BY level SEPARATOR '&nbsp;&nbsp;&gt;&nbsp;&nbsp;') FROM " . DB_PREFIX . "category_path cp LEFT JOIN " . DB_PREFIX . "category_description cd1 ON (cp.path_id = cd1.category_id AND cp.category_id != cp.path_id) WHERE cp.category_id = c.category_id AND cd1.language_id = '" . (int) $this->config->get('config_language_id') . "' GROUP BY cp.category_id) AS path, (SELECT DISTINCT keyword FROM " . DB_PREFIX . "url_alias WHERE query = 'category_id=" . (int) $category_id . "') AS keyword FROM " . DB_PREFIX . "category c LEFT JOIN " . DB_PREFIX . "category_description cd2 ON (c.category_id = cd2.category_id) WHERE c.category_id = '" . (int) $category_id . "' AND cd2.language_id = '" . (int) $this->config->get('config_language_id') . "'");
+
+        return $query->row;
     }
 }
 ?>

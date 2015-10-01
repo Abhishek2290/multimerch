@@ -512,9 +512,9 @@ class ControllerSellerAccountProduct extends ControllerSellerAccount {
 		*/
 
 		if (isset($data['categories']) && !empty($data['categories'])) {
-            
+                    
                     foreach ($data['categories'] as $index => $last_child_id) {
-                        if (!$this->MsLoader->MsProduct->validateIfLastLevelCategory($last_child_id)) {
+                        if (!$this->MsLoader->MsProduct->getValidatedIfLastLevelCategory($last_child_id)) {
                             unset($data['categories'][$index]);
                         }
                     }
@@ -522,10 +522,10 @@ class ControllerSellerAccountProduct extends ControllerSellerAccount {
                     $data['product_categories'] = array_values($data['categories']);
                 }
 
-		// data array could have been modified in the previous step
-		if (!isset($data['product_category']) || empty($data['product_category'])) {
-			$json['errors']['product_category'] = $this->language->get('ms_error_product_category_empty');
-		}
+                // data array could have been modified in the previous step
+                if (!isset($data['product_categories']) || empty($data['product_categories'])) {
+                    $json['errors']['product_category'] = $this->language->get('ms_error_product_category_not_valid');
+                }
 
 		if (in_array('model', $this->config->get('msconf_product_included_fields'))) {
 			if (empty($data['product_model'])) {
@@ -1113,7 +1113,7 @@ class ControllerSellerAccountProduct extends ControllerSellerAccount {
 			}
 		}
 		$this->data['salt'] = $this->MsLoader->MsSeller->getSalt($this->customer->getId());
-		$this->data['categories'] = $this->MsLoader->MsProduct->getCategories();
+		$this->data['categories'] = $this->MsLoader->MsProduct->getTopCategories();
 		$this->data['date_available'] = date('Y-m-d', time() - 86400);
 		$this->data['tax_classes'] = $this->MsLoader->MsHelper->getTaxClasses();
 		$this->data['stock_statuses'] = $this->MsLoader->MsHelper->getStockStatuses();
@@ -1176,6 +1176,23 @@ class ControllerSellerAccountProduct extends ControllerSellerAccount {
 		$this->data['ms_account_product_image_note'] = sprintf($this->language->get('ms_account_product_image_note'), $this->config->get('msconf_allowed_image_types'));
 		$this->data['back'] = $this->url->link('seller/account-product', '', 'SSL');
 	}
+        public function getChildCats() {
+            $return_data = array();
+            $post_data = $this->request->post;
+            if (!empty($post_data['cat_id'])) {
+                $cat_id = $post_data['cat_id'];
+                $child_categories = $this->MsLoader->MsProduct->getChilderenCategories($cat_id);
+                if (!empty($child_categories)) {
+                    $return_data['status'] = 1;
+                    $return_data['categories'] = $child_categories;
+                } else {
+                    $return_data['status'] = 0;
+                }
+            } else {
+                $return_data['status'] = 0;
+            }
+            echo json_encode($return_data);
+        }
 	
 	public function create() {
 		$this->_initForm();
