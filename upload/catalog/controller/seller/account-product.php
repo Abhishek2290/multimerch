@@ -514,7 +514,7 @@ class ControllerSellerAccountProduct extends ControllerSellerAccount {
 		if (isset($data['categories']) && !empty($data['categories'])) {
                     
                     foreach ($data['categories'] as $index => $last_child_id) {
-                        if (!$this->MsLoader->MsProduct->getValidatedIfLastLevelCategory($last_child_id)) {
+                        if (!$this->MsLoader->MsProduct->validateIfLastLevelCategory($last_child_id)) {
                             unset($data['categories'][$index]);
                         }
                     }
